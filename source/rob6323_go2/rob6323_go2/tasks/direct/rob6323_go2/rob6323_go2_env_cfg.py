@@ -17,6 +17,7 @@ from isaaclab.sensors import ContactSensorCfg
 from isaaclab.markers import VisualizationMarkersCfg
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
 
+# === ADDED Part 2: PD controller ===
 # add this import:
 from isaaclab.actuators import ImplicitActuatorCfg
 
@@ -28,9 +29,10 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # - spaces definition
     action_scale = 0.25
     action_space = 12
-    observation_space = 48 + 4  # Added 4 for clock inputs
+    observation_space = 48 + 4  # === MODIFIED Part 4: Added 4 for clock inputs ===
     state_space = 0
     debug_vis = True
+    # === ADDED Part 3: Early termination ===
     base_height_min = 0.15  # Terminate if base is lower than 15cm
 
     # simulation
@@ -62,11 +64,12 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # robot(s)
     # robot_cfg: ArticulationCfg = UNITREE_GO2_CFG.replace(prim_path="/World/envs/env_.*/Robot")
 
-    # PD control gains
+    # === ADDED Part 2: PD control gains ===
     Kp = 20.0  # Proportional gain
     Kd = 0.5   # Derivative gain
     torque_limits = 100.0  # Max torque
 
+    # === MODIFIED Part 2: Disable implicit actuator PD, use custom PD ===
     # Update robot_cfg
     robot_cfg: ArticulationCfg = UNITREE_GO2_CFG.replace(prim_path="/World/envs/env_.*/Robot")
     # "base_legs" is an arbitrary key we use to group these actuators
@@ -100,8 +103,12 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # reward scales
     lin_vel_reward_scale = 1.0
     yaw_rate_reward_scale = 0.5
+    # === ADDED Part 1: Action rate penalty ===
     action_rate_reward_scale = -0.1
-
+    # === ADDED Part 4: Raibert heuristic ===
     raibert_heuristic_reward_scale = -10.0
     feet_clearance_reward_scale = -30.0
     tracking_contacts_shaped_force_reward_scale = 4.0
+
+    # === ADDED: Part 5 rewards ===
+    orient_reward_scale = -5.0  # Penalize non-flat orientation
