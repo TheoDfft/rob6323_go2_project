@@ -33,7 +33,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     state_space = 0
     debug_vis = True
     # === ADDED Part 3: Early termination ===
-    base_height_min = 0.15  # Terminate if base is lower than 15cm
+    base_height_min = 0.20  # Terminate if base is lower than 20cm
 
     # simulation
     sim: SimulationCfg = SimulationCfg(
@@ -111,4 +111,5 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     tracking_contacts_shaped_force_reward_scale = 4.0
 
     # === ADDED: Part 5 rewards ===
-    orient_reward_scale = -5.0  # Penalize non-flat orientation
+    orient_reward_scale = -0.5  # Penalize non-flat orientation
+    lin_vel_z_reward_scale = -5.0  # Penalize vertical bouncing
