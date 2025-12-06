@@ -49,6 +49,7 @@ class Rob6323Go2Env(DirectRLEnv):
                 "raibert_heuristic",  # === ADDED: Part 4 ===
                 "orient",  # === ADDED: Part 5 ===
                 "lin_vel_z",  # === ADDED: Penalize vertical bouncing ===
+                "dof_vel",  # === ADDED: Penalize high joint velocities ===
             ]
         }
 
@@ -170,6 +171,9 @@ class Rob6323Go2Env(DirectRLEnv):
 
         # === ADDED: Part Penalize vertical velocity (z-component of base linear velocity) ===
         rew_lin_vel_z = torch.square(self.robot.data.root_lin_vel_b[:, 2])
+
+        # === ADDED: Penalize high joint velocities ===
+        rew_dof_vel = torch.sum(torch.square(self.robot.data.joint_vel), dim=1)
         
         rewards = {
             "track_lin_vel_xy_exp": lin_vel_error_mapped * self.cfg.lin_vel_reward_scale,
@@ -178,6 +182,7 @@ class Rob6323Go2Env(DirectRLEnv):
             "raibert_heuristic": rew_raibert_heuristic * self.cfg.raibert_heuristic_reward_scale,
             "orient": rew_orient * self.cfg.orient_reward_scale,
             "lin_vel_z": rew_lin_vel_z * self.cfg.lin_vel_z_reward_scale,
+            "dof_vel": rew_dof_vel * self.cfg.dof_vel_reward_scale,
         }
         reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
         # Logging

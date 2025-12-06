@@ -113,3 +113,4 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED: Part 5 rewards ===
     orient_reward_scale = -5.0  # Penalize non-flat orientation
     lin_vel_z_reward_scale = -0.5  # Penalize vertical bouncing
+    dof_vel_reward_scale = -0.0001  # Penalize high joint velocities
