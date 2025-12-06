@@ -51,6 +51,7 @@ class Rob6323Go2Env(DirectRLEnv):
                 "lin_vel_z",  # === ADDED: Penalize vertical bouncing ===
                 "dof_vel",  # === ADDED: Penalize high joint velocities ===
                 "ang_vel_xy",  # === ADDED: Penalize roll/pitch angular velocity ===
+                "feet_clearance",  # === ADDED: Penalize low foot height during swing ===
             ]
         }
 
@@ -178,6 +179,18 @@ class Rob6323Go2Env(DirectRLEnv):
 
         # === ADDED: Penalize angular velocity in XY plane (roll/pitch) ===
         rew_ang_vel_xy = torch.sum(torch.square(self.robot.data.root_ang_vel_b[:, :2]), dim=1)
+
+        # === ADDED: Penalize low foot height during swing phase ===
+        # Matches IsaacGym reference: reference/go2_terrain.py compute_reward_CaT()
+        # phases: 0 at start/end of swing, 1 at apex of swing
+        phases = 1 - torch.abs(1.0 - torch.clip((self.foot_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
+        # Get foot heights (Z coordinate in world frame)
+        foot_heights = self.foot_positions_w[:, :, 2]
+        # Target height: 8cm max clearance at swing apex + 2cm foot radius offset
+        target_height = 0.08 * phases + 0.02
+        # Penalize deviation from target, only during swing (when desired_contact_states is 0)
+        rew_foot_clearance = torch.square(target_height - foot_heights) * (1 - self.desired_contact_states)
+        rew_feet_clearance = torch.sum(rew_foot_clearance, dim=1)
         
         rewards = {
             "track_lin_vel_xy_exp": lin_vel_error_mapped * self.cfg.lin_vel_reward_scale,
@@ -188,6 +201,7 @@ class Rob6323Go2Env(DirectRLEnv):
             "lin_vel_z": rew_lin_vel_z * self.cfg.lin_vel_z_reward_scale,
             "dof_vel": rew_dof_vel * self.cfg.dof_vel_reward_scale,
             "ang_vel_xy": rew_ang_vel_xy * self.cfg.ang_vel_xy_reward_scale,
+            "feet_clearance": rew_feet_clearance * self.cfg.feet_clearance_reward_scale,
         }
         reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
         # Logging

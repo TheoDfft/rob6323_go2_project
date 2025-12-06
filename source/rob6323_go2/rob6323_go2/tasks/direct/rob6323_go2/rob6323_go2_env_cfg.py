@@ -107,11 +107,11 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     action_rate_reward_scale = -0.1
     # === ADDED Part 4: Raibert heuristic ===
     raibert_heuristic_reward_scale = -10.0
-    feet_clearance_reward_scale = -30.0
-    tracking_contacts_shaped_force_reward_scale = 4.0
-
     # === ADDED: Part 5 rewards ===
     orient_reward_scale = -5.0  # Penalize non-flat orientation
     lin_vel_z_reward_scale = -0.5  # Penalize vertical bouncing
     dof_vel_reward_scale = -0.0001  # Penalize high joint velocities
     ang_vel_xy_reward_scale = -0.001  # Penalize roll/pitch angular velocity
+    # === ADDED: Part 6: Foot clearance ===
+    feet_clearance_reward_scale = -30.0  # Penalize low foot height during swing
+
