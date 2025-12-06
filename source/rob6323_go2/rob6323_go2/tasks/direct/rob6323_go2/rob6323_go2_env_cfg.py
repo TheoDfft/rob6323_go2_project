@@ -111,5 +111,5 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     tracking_contacts_shaped_force_reward_scale = 4.0
 
     # === ADDED: Part 5 rewards ===
-    orient_reward_scale = -0.5  # Penalize non-flat orientation
-    lin_vel_z_reward_scale = -5.0  # Penalize vertical bouncing
+    orient_reward_scale = -5.0  # Penalize non-flat orientation
+    lin_vel_z_reward_scale = -0.5  # Penalize vertical bouncing
