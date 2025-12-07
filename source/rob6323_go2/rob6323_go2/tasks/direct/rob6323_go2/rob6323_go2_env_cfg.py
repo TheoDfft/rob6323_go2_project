@@ -114,4 +114,6 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     ang_vel_xy_reward_scale = -0.001  # Penalize roll/pitch angular velocity
     # === ADDED: Part 6: Foot clearance ===
     feet_clearance_reward_scale = -30.0  # Penalize low foot height during swing
+    # === ADDED: Part 6: Tracking contacts shaped force ===
+    tracking_contacts_shaped_force_reward_scale = 4.0  # Reward matching gait contact plan
 

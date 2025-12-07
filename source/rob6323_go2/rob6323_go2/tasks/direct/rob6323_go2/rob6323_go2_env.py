@@ -198,6 +198,19 @@ class Rob6323Go2Env(DirectRLEnv):
         # Penalize deviation from target, only during swing (when desired_contact_states is 0)
         rew_foot_clearance = torch.square(target_height - foot_heights) * (1 - self.desired_contact_states)
         rew_feet_clearance = torch.sum(rew_foot_clearance, dim=1)
+
+        # === ADDED Part 6: Tracking contacts shaped force ===
+        # Matches IsaacGym reference: reference/go2_terrain.py compute_reward_CaT()
+        # Penalize contact forces during swing phase (when foot should be in air)
+        foot_forces = torch.norm(self._contact_sensor.data.net_forces_w[:, self._feet_ids_sensor, :], dim=-1)
+        desired_contact = self.desired_contact_states
+        rew_tracking_contacts_shaped_force = torch.zeros(self.num_envs, device=self.device)
+        for i in range(4):
+            # When desired_contact=0 (swing), penalize any contact force
+            rew_tracking_contacts_shaped_force += -(1 - desired_contact[:, i]) * (
+                1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.0)
+            )
+        rew_tracking_contacts_shaped_force = rew_tracking_contacts_shaped_force / 4  # Average over 4 feet
         
         rewards = {
             "track_lin_vel_xy_exp": lin_vel_error_mapped * self.cfg.lin_vel_reward_scale,
@@ -209,6 +222,7 @@ class Rob6323Go2Env(DirectRLEnv):
             "dof_vel": rew_dof_vel * self.cfg.dof_vel_reward_scale,
             "ang_vel_xy": rew_ang_vel_xy * self.cfg.ang_vel_xy_reward_scale,
             "feet_clearance": rew_feet_clearance * self.cfg.feet_clearance_reward_scale,
+            "tracking_contacts_shaped_force": rew_tracking_contacts_shaped_force * self.cfg.tracking_contacts_shaped_force_reward_scale,
         }
         reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
         # Logging
