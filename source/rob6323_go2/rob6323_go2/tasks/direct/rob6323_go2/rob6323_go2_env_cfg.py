@@ -13,7 +13,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sim import SimulationCfg
 from isaaclab.utils import configclass
 from isaaclab.terrains import TerrainImporterCfg, TerrainGeneratorCfg
-from isaaclab.terrains.height_field import HfRandomUniformTerrainCfg, HfDiscreteObstaclesTerrainCfg
+from isaaclab.terrains.height_field import HfWaveTerrainCfg
 from isaaclab.sensors import ContactSensorCfg
 from isaaclab.markers import VisualizationMarkersCfg
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
@@ -48,33 +48,27 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
             restitution=0.0,
         ),
     )
-    # === MODIFIED: Switched from plane to rough terrain ===
+    # === MODIFIED: Wave terrain for locomotion challenge ===
+    # Reference settings from Go2Terrain.yaml: 8m x 8m tiles, 10 levels, 20 terrains
+    # Robot length ~0.7m, peak-to-peak wavelength >= 1.4m (2x robot length)
+    # With 8m terrain and 5 waves: wavelength = 8/5 = 1.6m per wave (meets requirement)
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
         terrain_type="generator",
         terrain_generator=TerrainGeneratorCfg(
-            size=(8.0, 8.0),
-            border_width=20.0,
-            num_rows=10,
-            num_cols=20,
-            horizontal_scale=0.1,
-            vertical_scale=0.005,
+            size=(8.0, 8.0),  # 8m x 8m per tile (from reference)
+            border_width=20.0,  # Flat spawn border
+            num_rows=10,  # numLevels from reference
+            num_cols=20,  # numTerrains from reference
+            horizontal_scale=0.1,  # Resolution: 10cm per height sample
+            vertical_scale=0.005,  # Height scale factor
             slope_threshold=0.75,
             use_cache=False,
             sub_terrains={
-                "random_rough": HfRandomUniformTerrainCfg(
-                    proportion=0.5,
-                    noise_range=(0.02, 0.10),
-                    noise_step=0.02,
-                    border_width=0.25,
-                ),
-                "obstacles": HfDiscreteObstaclesTerrainCfg(
-                    proportion=0.5,
-                    obstacle_height_mode="fixed",
-                    obstacle_height_range=(0.02, 0.08),
-                    obstacle_width_range=(0.25, 0.75),
-                    num_obstacles=20,
-                    platform_width=2.0,
+                "waves": HfWaveTerrainCfg(
+                    proportion=1.0,  # 100% wave terrain
+                    amplitude_range=(0.03, 0.1),  # Wave height: 2-6cm amplitude
+                    num_waves=5,  # 5 waves per 8m = 1.6m wavelength (> 1.4m requirement)
                     border_width=0.25,
                 ),
             },
@@ -138,8 +132,8 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED Part 4: Raibert heuristic ===
     raibert_heuristic_reward_scale = -10.0
     # === ADDED: Part 5 rewards ===
-    orient_reward_scale = -5.0  # Penalize non-flat orientation
-    lin_vel_z_reward_scale = -0.5  # Penalize vertical bouncing
+    orient_reward_scale = 0.0  # Penalize non-flat orientation
+    lin_vel_z_reward_scale = 0.0  # Penalize vertical bouncing
     dof_vel_reward_scale = -0.0001  # Penalize high joint velocities
     ang_vel_xy_reward_scale = -0.001  # Penalize roll/pitch angular velocity
     # === ADDED: Part 6: Foot clearance ===
