@@ -12,7 +12,8 @@ from isaaclab.envs import DirectRLEnvCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sim import SimulationCfg
 from isaaclab.utils import configclass
-from isaaclab.terrains import TerrainImporterCfg
+from isaaclab.terrains import TerrainImporterCfg, TerrainGeneratorCfg
+from isaaclab.terrains.height_field import HfRandomUniformTerrainCfg, HfDiscreteObstaclesTerrainCfg
 from isaaclab.sensors import ContactSensorCfg
 from isaaclab.markers import VisualizationMarkersCfg
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
@@ -47,9 +48,37 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
             restitution=0.0,
         ),
     )
+    # === MODIFIED: Switched from plane to rough terrain ===
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="plane",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            size=(8.0, 8.0),
+            border_width=20.0,
+            num_rows=10,
+            num_cols=20,
+            horizontal_scale=0.1,
+            vertical_scale=0.005,
+            slope_threshold=0.75,
+            use_cache=False,
+            sub_terrains={
+                "random_rough": HfRandomUniformTerrainCfg(
+                    proportion=0.5,
+                    noise_range=(0.02, 0.10),
+                    noise_step=0.02,
+                    border_width=0.25,
+                ),
+                "obstacles": HfDiscreteObstaclesTerrainCfg(
+                    proportion=0.5,
+                    obstacle_height_mode="fixed",
+                    obstacle_height_range=(0.02, 0.08),
+                    obstacle_width_range=(0.25, 0.75),
+                    num_obstacles=20,
+                    platform_width=2.0,
+                    border_width=0.25,
+                ),
+            },
+        ),
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
@@ -60,6 +89,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
         ),
         debug_vis=False,
     )
+    # === END MODIFIED ===
 
     # robot(s)
     # robot_cfg: ArticulationCfg = UNITREE_GO2_CFG.replace(prim_path="/World/envs/env_.*/Robot")
