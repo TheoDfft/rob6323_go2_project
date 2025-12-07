@@ -52,6 +52,7 @@ class Rob6323Go2Env(DirectRLEnv):
                 "dof_vel",  # === ADDED: Penalize high joint velocities ===
                 "ang_vel_xy",  # === ADDED: Penalize roll/pitch angular velocity ===
                 "feet_clearance",  # === ADDED: Penalize low foot height during swing ===
+                "tracking_contacts_shaped_force",  # === ADDED: Match gait contact plan ===
             ]
         }
 
@@ -78,6 +79,12 @@ class Rob6323Go2Env(DirectRLEnv):
         for name in foot_names:
             id_list, _ = self.robot.find_bodies(name)
             self._feet_ids.append(id_list[0])
+
+        # === ADDED Part 6: Feet indices in CONTACT SENSOR (different from robot body indices!) ===
+        self._feet_ids_sensor = []
+        for name in foot_names:
+            id_list, _ = self._contact_sensor.find_bodies(name)
+            self._feet_ids_sensor.append(id_list[0])
 
         # === ADDED Part 4: Gait variables for Raibert heuristic ===
         self.gait_indices = torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
