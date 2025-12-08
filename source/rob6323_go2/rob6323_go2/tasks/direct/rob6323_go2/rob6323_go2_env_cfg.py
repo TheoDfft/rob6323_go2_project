@@ -56,10 +56,10 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
         prim_path="/World/ground",
         terrain_type="generator",
         terrain_generator=TerrainGeneratorCfg(
-            size=(8.0, 8.0),  # 8m x 8m per tile (from reference)
+            size=(40.0, 40.0),  # 8m x 8m per tile (from reference)
             border_width=20.0,  # Flat spawn border
-            num_rows=10,  # numLevels from reference
-            num_cols=20,  # numTerrains from reference
+            num_rows=1,  # numLevels from reference
+            num_cols=1,  # numTerrains from reference
             horizontal_scale=0.1,  # Resolution: 10cm per height sample
             vertical_scale=0.005,  # Height scale factor
             slope_threshold=0.75,
@@ -67,9 +67,9 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
             sub_terrains={
                 "waves": HfWaveTerrainCfg(
                     proportion=1.0,  # 100% wave terrain
-                    amplitude_range=(0.03, 0.1),  # Wave height: 2-6cm amplitude
-                    num_waves=5,  # 5 waves per 8m = 1.6m wavelength (> 1.4m requirement)
-                    border_width=0.25,
+                    amplitude_range=(0.2, 0.2),  # Wave height: 2-6cm amplitude
+                    num_waves=2,  # 5 waves per 8m = 1.6m wavelength (> 1.4m requirement)
+                    border_width=0.5,
                 ),
             },
         ),
