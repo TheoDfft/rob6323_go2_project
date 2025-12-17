@@ -17,9 +17,6 @@ from isaaclab.sensors import ContactSensorCfg
 from isaaclab.markers import VisualizationMarkersCfg
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
 
-# === ADDED: PD controller import ===
-from isaaclab.actuators import ImplicitActuatorCfg
-
 @configclass
 class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # env
@@ -28,11 +25,9 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # - spaces definition
     action_scale = 0.25
     action_space = 12
-    observation_space = 48 + 4  # === MODIFIED: Added 4 for clock inputs ===
+    observation_space = 48
     state_space = 0
     debug_vis = True
-    # === ADDED: Base height termination threshold ===
-    base_height_min = 0.15
 
     # simulation
     sim: SimulationCfg = SimulationCfg(
@@ -59,24 +54,9 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
         ),
         debug_vis=False,
     )
-
     # robot(s)
-    # === ADDED: PD control gains ===
-    Kp = 20.0
-    Kd = 0.5
-    torque_limits = 100.0
-
-    # === MODIFIED: Disable implicit actuator PD, use custom PD ===
     robot_cfg: ArticulationCfg = UNITREE_GO2_CFG.replace(prim_path="/World/envs/env_.*/Robot")
-    # "base_legs" is an arbitrary key we use to group these actuators
-    robot_cfg.actuators["base_legs"] = ImplicitActuatorCfg(
-        joint_names_expr=[".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"],
-        effort_limit=23.5,
-        velocity_limit=30.0,
-        stiffness=0.0,
-        damping=0.0,
-    )
-    
+
     # scene
     scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=4096, env_spacing=4.0, replicate_physics=True)
     contact_sensor: ContactSensorCfg = ContactSensorCfg(
@@ -99,20 +79,3 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # reward scales
     lin_vel_reward_scale = 1.0
     yaw_rate_reward_scale = 0.5
-    # === ADDED: Action rate penalty ===
-    action_rate_reward_scale = -0.1
-    # === ADDED: Raibert heuristic ===
-    raibert_heuristic_reward_scale = -10.0
-    # === ADDED: Orientation penalty ===
-    orient_reward_scale = -5.0
-    # === ADDED: Vertical velocity penalty ===
-    lin_vel_z_reward_scale = -0.5
-    # === ADDED: Joint velocity penalty ===
-    dof_vel_reward_scale = -0.0001
-    # === ADDED: Angular velocity penalty (roll/pitch) ===
-    ang_vel_xy_reward_scale = -0.001
-    # === ADDED: Feet clearance penalty ===
-    feet_clearance_reward_scale = -30.0
-    # === ADDED: Contact tracking shaped force ===
-    tracking_contacts_shaped_force_reward_scale = 4.0
-
