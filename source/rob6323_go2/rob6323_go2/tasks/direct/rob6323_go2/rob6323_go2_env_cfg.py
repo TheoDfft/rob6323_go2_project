@@ -36,7 +36,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     state_space = 0
     debug_vis = True
     # === ADDED: Base height termination threshold ===
-    base_height_min = 0.1
+    base_height_min = 0.05
 
     # simulation
     sim: SimulationCfg = SimulationCfg(
@@ -70,7 +70,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
         prim_path="/World/ground",
         terrain_type="generator",
         terrain_generator=TerrainGeneratorCfg(
-            size=(100.0, 100.0), #(8.0, 8.0)
+            size=(200.0, 200.0), #(8.0, 8.0)
             border_width=0.0, #20.0
             num_rows=1, #10
             num_cols=1, #20
@@ -81,7 +81,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
             sub_terrains={
                 "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
                     proportion=1.0,  # 100% random rough terrain (continuous, simple)
-                    noise_range=(0.01, 0.07),  # Low noise range (1-4cm) for simple terrain
+                    noise_range=(0.01, 0.07), 
                     noise_step=0.01,
                     border_width=0.25,
                 ),
@@ -150,7 +150,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED: Angular velocity penalty (roll/pitch) ===
     ang_vel_xy_reward_scale = -0.001
     # === ADDED: Feet clearance penalty ===
-    feet_clearance_reward_scale = -30.0 # -30.0
+    feet_clearance_reward_scale = -200.0 # (was -30.0) Notes: Need to increase this to force the robot to lift its feet more often and "climb" more easily
     # === ADDED: Contact tracking shaped force ===
     tracking_contacts_shaped_force_reward_scale = 0.0
 

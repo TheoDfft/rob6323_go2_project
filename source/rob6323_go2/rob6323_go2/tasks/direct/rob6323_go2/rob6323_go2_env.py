@@ -189,7 +189,7 @@ class Rob6323Go2Env(DirectRLEnv):
         # === ADDED: Feet clearance penalty ===
         phases = 1 - torch.abs(1.0 - torch.clip((self.foot_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
         foot_heights = self.foot_positions_w[:, :, 2]
-        target_height = 0.08 * phases + 0.02
+        target_height = 0.1 * phases + 0.02
         rew_foot_clearance = torch.square(target_height - foot_heights) * (1 - self.desired_contact_states)
         rew_feet_clearance = torch.sum(rew_foot_clearance, dim=1)
 
