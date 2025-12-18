@@ -251,9 +251,20 @@ class Rob6323Go2Env(DirectRLEnv):
         joint_vel = self.robot.data.default_joint_vel[env_ids]
         default_root_state = self.robot.data.default_root_state[env_ids]
         default_root_state[:, :3] += self._terrain.env_origins[env_ids]
+        # === ADDED: Random XY offsets to spread robots randomly across entire terrain tile ===
+        terrain_size = self.cfg.terrain.terrain_generator.size[0]  # Assume 1 tilesquare terrain
+        margin = 2.0  # Leave 2m margin on each side to avoid edges
+        # Random positions across entire tile
+        # Sample from -terrain_size/2 + margin to terrain_size/2 - margin
+        min_pos = -terrain_size / 2 + margin
+        max_pos = terrain_size / 2 - margin
+        xy_offset = torch.zeros(len(env_ids), 2, device=self.device).uniform_(min_pos, max_pos)
+        default_root_state[:, :2] += xy_offset
+
         self.robot.write_root_pose_to_sim(default_root_state[:, :7], env_ids)
         self.robot.write_root_velocity_to_sim(default_root_state[:, 7:], env_ids)
         self.robot.write_joint_state_to_sim(joint_pos, joint_vel, None, env_ids)
+        
         # Logging
         extras = dict()
         for key in self._episode_sums.keys():

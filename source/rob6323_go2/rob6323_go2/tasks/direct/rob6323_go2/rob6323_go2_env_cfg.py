@@ -20,6 +20,10 @@ from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, G
 # === ADDED: PD controller import ===
 from isaaclab.actuators import ImplicitActuatorCfg
 
+# === ADDED: Rough terrain imports ===
+import isaaclab.terrains as terrain_gen
+from isaaclab.terrains.terrain_generator_cfg import TerrainGeneratorCfg
+
 @configclass
 class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # env
@@ -32,7 +36,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     state_space = 0
     debug_vis = True
     # === ADDED: Base height termination threshold ===
-    base_height_min = 0.15
+    base_height_min = 0.1
 
     # simulation
     sim: SimulationCfg = SimulationCfg(
@@ -46,16 +50,50 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
             restitution=0.0,
         ),
     )
+    # terrain = TerrainImporterCfg(
+    #     prim_path="/World/ground",
+    #     terrain_type="plane",
+    #     collision_group=-1,
+    #     physics_material=sim_utils.RigidBodyMaterialCfg(
+    #         friction_combine_mode="multiply",
+    #         restitution_combine_mode="multiply",
+    #         static_friction=1.0,
+    #         dynamic_friction=1.0,
+    #         restitution=0.0,
+    #     ),
+    #     debug_vis=False,
+    # )
+
+
+    # === MODIFIED: Simple rough terrain config (mostly random_rough with low noise) ===
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="plane",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            size=(100.0, 100.0), #(8.0, 8.0)
+            border_width=0.0, #20.0
+            num_rows=1, #10
+            num_cols=1, #20
+            horizontal_scale=0.1,
+            vertical_scale=0.005,
+            slope_threshold=0.75,
+            use_cache=False,
+            sub_terrains={
+                "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
+                    proportion=1.0,  # 100% random rough terrain (continuous, simple)
+                    noise_range=(0.01, 0.07),  # Low noise range (1-4cm) for simple terrain
+                    noise_step=0.01,
+                    border_width=0.25,
+                ),
+            },
+        ),
+        max_init_terrain_level=5,  # Start with easier terrains
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
             restitution_combine_mode="multiply",
             static_friction=1.0,
             dynamic_friction=1.0,
-            restitution=0.0,
         ),
         debug_vis=False,
     )
@@ -102,9 +140,9 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED: Action rate penalty ===
     action_rate_reward_scale = -0.1
     # === ADDED: Raibert heuristic ===
-    raibert_heuristic_reward_scale = -10.0
+    raibert_heuristic_reward_scale = -0.0 # -10.0
     # === ADDED: Orientation penalty ===
-    orient_reward_scale = -5.0
+    orient_reward_scale = 0.0  # -5.0
     # === ADDED: Vertical velocity penalty ===
     lin_vel_z_reward_scale = -0.5
     # === ADDED: Joint velocity penalty ===
@@ -112,7 +150,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED: Angular velocity penalty (roll/pitch) ===
     ang_vel_xy_reward_scale = -0.001
     # === ADDED: Feet clearance penalty ===
-    feet_clearance_reward_scale = -30.0
+    feet_clearance_reward_scale = -30.0 # -30.0
     # === ADDED: Contact tracking shaped force ===
-    tracking_contacts_shaped_force_reward_scale = 4.0
+    tracking_contacts_shaped_force_reward_scale = 0.0
 
