@@ -54,6 +54,7 @@ class Rob6323Go2Env(DirectRLEnv):
                 "feet_clearance",
                 "tracking_contacts_shaped_force",
                 "feet_air_time",
+                "foot2contact",
             ]
         }
 
@@ -218,6 +219,12 @@ class Rob6323Go2Env(DirectRLEnv):
         air_time = torch.sum((last_air_time - 0.5) * first_contact, dim=1) * (
             torch.norm(self._commands[:, :2], dim=1) > 0.1
         )
+
+        # === ADDED: Foot2contact penalty (penalizes the robot for having more or less than 2 feet in contact) ===
+        # Check vertical contact forces > 1.0 for all feet
+        foot_contact_forces_z = self._contact_sensor.data.net_forces_w[:, self._feet_ids_sensor, 2]
+        num_feet_in_contact = (foot_contact_forces_z > 1.0).sum(dim=1)
+        rew_foot2contact = -torch.abs(num_feet_in_contact - 2) / 2.0
         
         rewards = {
             "track_lin_vel_xy_exp": lin_vel_error_mapped * self.cfg.lin_vel_reward_scale,
@@ -231,6 +238,7 @@ class Rob6323Go2Env(DirectRLEnv):
             "feet_clearance": rew_feet_clearance * self.cfg.feet_clearance_reward_scale,
             "tracking_contacts_shaped_force": rew_tracking_contacts_shaped_force * self.cfg.tracking_contacts_shaped_force_reward_scale,
             "feet_air_time": air_time * self.cfg.feet_air_time_reward_scale,
+            "foot2contact": rew_foot2contact * self.cfg.foot2contact_reward_scale,
         }
         reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
         # Logging

@@ -37,7 +37,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     state_space = 0
     debug_vis = True
     # === ADDED: Base height termination threshold ===
-    base_height_min = 0.05
+    base_height_min = 0.15
 
     # simulation
     sim: SimulationCfg = SimulationCfg(
@@ -155,7 +155,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED: Orientation penalty ===
     orient_reward_scale = 0.0  # -5.0
     # === ADDED: Vertical velocity penalty ===
-    lin_vel_z_reward_scale = -0.05
+    lin_vel_z_reward_scale = -0.1
     # === ADDED: Joint velocity penalty ===
     dof_vel_reward_scale = -0.0001
     # === ADDED: Angular velocity penalty (roll/pitch) ===
@@ -166,4 +166,6 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     tracking_contacts_shaped_force_reward_scale = 0.0
     # === ADDED: Feet air time reward ===
     feet_air_time_reward_scale = 0.5
+    # === ADDED: Foot2contact penalty (penalizes the robot for having more or less than 2 feet in contact) ===
+    foot2contact_reward_scale = -1.0
 
