@@ -1,0 +1,56 @@
+--- git status ---
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 40255ab..a15df6d 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -37,7 +37,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     state_space = 0
+     debug_vis = True
+     # === ADDED: Base height termination threshold ===
+-    base_height_min = 0.1
++    base_height_min = 0.15
+ 
+     # simulation
+     sim: SimulationCfg = SimulationCfg(
+@@ -155,7 +155,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # === ADDED: Orientation penalty ===
+     orient_reward_scale = 0.0  # -5.0
+     # === ADDED: Vertical velocity penalty ===
+-    lin_vel_z_reward_scale = -1.0
++    lin_vel_z_reward_scale = -0.1
+     # === ADDED: Joint velocity penalty ===
+     dof_vel_reward_scale = -0.0001
+     # === ADDED: Angular velocity penalty (roll/pitch) ===
+@@ -169,3 +169,15 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # === ADDED: Foot2contact penalty (penalizes the robot for having more or less than 2 feet in contact) ===
+     foot2contact_reward_scale = -1.0
+ 
++lin_vel_reward_scale: 1.0
++yaw_rate_reward_scale: 0.1
++action_rate_reward_scale: -0.1
++raibert_heuristic_reward_scale: -0.0
++orient_reward_scale: 0.0
++lin_vel_z_reward_scale: -0.1
++dof_vel_reward_scale: -0.0001
++ang_vel_xy_reward_scale: -0.001
++feet_clearance_reward_scale: -0.0
++tracking_contacts_shaped_force_reward_scale: 0.0
++feet_air_time_reward_scale: 0.5
++foot2contact_reward_scale: -1.0
+\ No newline at end of file
