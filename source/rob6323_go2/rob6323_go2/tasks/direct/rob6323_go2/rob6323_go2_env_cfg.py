@@ -13,7 +13,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sim import SimulationCfg
 from isaaclab.utils import configclass
 from isaaclab.terrains import TerrainImporterCfg
-from isaaclab.sensors import ContactSensorCfg
+from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
 from isaaclab.markers import VisualizationMarkersCfg
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
 
@@ -32,7 +32,8 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # - spaces definition
     action_scale = 0.25
     action_space = 12
-    observation_space = 48 + 4  # === MODIFIED: Added 4 for clock inputs ===
+    # observation_space = 48 + 4  # === MODIFIED: Added 4 for clock inputs ===
+    observation_space = 235 # === ADDED: 48 + 187 rays for height scanner ===
     state_space = 0
     debug_vis = True
     # === ADDED: Base height termination threshold ===
@@ -98,6 +99,16 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
         debug_vis=False,
     )
 
+    # we add a height scanner for perceptive locomotion
+    height_scanner = RayCasterCfg(
+        prim_path="/World/envs/env_.*/Robot/base",
+        offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
+        ray_alignment="yaw",
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
+        debug_vis=False,
+        mesh_prim_paths=["/World/ground"],
+    )
+
     # robot(s)
     # === ADDED: PD control gains ===
     Kp = 20.0
@@ -136,7 +147,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
 
     # reward scales
     lin_vel_reward_scale = 1.0
-    yaw_rate_reward_scale = 0.5
+    yaw_rate_reward_scale = 0.1
     # === ADDED: Action rate penalty ===
     action_rate_reward_scale = -0.1
     # === ADDED: Raibert heuristic ===
@@ -144,13 +155,15 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED: Orientation penalty ===
     orient_reward_scale = 0.0  # -5.0
     # === ADDED: Vertical velocity penalty ===
-    lin_vel_z_reward_scale = -0.5
+    lin_vel_z_reward_scale = -0.05
     # === ADDED: Joint velocity penalty ===
     dof_vel_reward_scale = -0.0001
     # === ADDED: Angular velocity penalty (roll/pitch) ===
     ang_vel_xy_reward_scale = -0.001
     # === ADDED: Feet clearance penalty ===
-    feet_clearance_reward_scale = -200.0 # (was -30.0) Notes: Need to increase this to force the robot to lift its feet more often and "climb" more easily
+    feet_clearance_reward_scale = -0.0 # (was -30.0) Notes: Need to increase this to force the robot to lift its feet more often and "climb" more easily
     # === ADDED: Contact tracking shaped force ===
     tracking_contacts_shaped_force_reward_scale = 0.0
+    # === ADDED: Feet air time reward ===
+    feet_air_time_reward_scale = 0.5
 

@@ -17,7 +17,7 @@ from isaaclab.assets import Articulation
 from isaaclab.envs import DirectRLEnv
 from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
 from isaaclab.utils.math import sample_uniform
-from isaaclab.sensors import ContactSensor
+from isaaclab.sensors import ContactSensor, RayCaster
 from isaaclab.markers import VisualizationMarkers
 import isaaclab.utils.math as math_utils
 
@@ -53,6 +53,7 @@ class Rob6323Go2Env(DirectRLEnv):
                 "ang_vel_xy",
                 "feet_clearance",
                 "tracking_contacts_shaped_force",
+                "feet_air_time",
             ]
         }
 
@@ -99,7 +100,10 @@ class Rob6323Go2Env(DirectRLEnv):
     def _setup_scene(self):
         self.robot = Articulation(self.cfg.robot_cfg)
         self._contact_sensor = ContactSensor(self.cfg.contact_sensor)
-        # add ground plane
+        if isinstance(self.cfg, Rob6323Go2EnvCfg):
+            # we add a height scanner for perceptive locomotion
+            self._height_scanner = RayCaster(self.cfg.height_scanner)
+            self.scene.sensors["height_scanner"] = self._height_scanner
         self.cfg.terrain.num_envs = self.scene.cfg.num_envs
         self.cfg.terrain.env_spacing = self.scene.cfg.env_spacing
         self._terrain = self.cfg.terrain.class_type(self.cfg.terrain)
@@ -136,6 +140,10 @@ class Rob6323Go2Env(DirectRLEnv):
 
     def _get_observations(self) -> dict:
         self._previous_actions = self._actions.clone()
+        height_data = None
+        height_data = (
+                self._height_scanner.data.pos_w[:, 2].unsqueeze(1) - self._height_scanner.data.ray_hits_w[..., 2] - 0.5
+            ).clip(-1.0, 1.0)
         obs = torch.cat(
             [
                 tensor
@@ -148,6 +156,7 @@ class Rob6323Go2Env(DirectRLEnv):
                     self.robot.data.joint_vel,
                     self._actions,
                     self.clock_inputs,  # === ADDED: Gait phase info ===
+                    height_data, # === ADDED: Height data for rough terrain locomotion ===
                 )
                 if tensor is not None
             ],
@@ -202,6 +211,13 @@ class Rob6323Go2Env(DirectRLEnv):
                 1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.0)
             )
         rew_tracking_contacts_shaped_force = rew_tracking_contacts_shaped_force / 4
+
+        # === ADDED: Feet air time reward ===
+        first_contact = self._contact_sensor.compute_first_contact(self.step_dt)[:, self._feet_ids_sensor]
+        last_air_time = self._contact_sensor.data.last_air_time[:, self._feet_ids_sensor]
+        air_time = torch.sum((last_air_time - 0.5) * first_contact, dim=1) * (
+            torch.norm(self._commands[:, :2], dim=1) > 0.1
+        )
         
         rewards = {
             "track_lin_vel_xy_exp": lin_vel_error_mapped * self.cfg.lin_vel_reward_scale,
@@ -214,6 +230,7 @@ class Rob6323Go2Env(DirectRLEnv):
             "ang_vel_xy": rew_ang_vel_xy * self.cfg.ang_vel_xy_reward_scale,
             "feet_clearance": rew_feet_clearance * self.cfg.feet_clearance_reward_scale,
             "tracking_contacts_shaped_force": rew_tracking_contacts_shaped_force * self.cfg.tracking_contacts_shaped_force_reward_scale,
+            "feet_air_time": air_time * self.cfg.feet_air_time_reward_scale,
         }
         reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
         # Logging
