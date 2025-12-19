@@ -1,0 +1,101 @@
+--- git status ---
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index fb5856c..94a03b5 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -20,6 +20,9 @@ from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, G
+ # === ADDED: PD controller import ===
+ from isaaclab.actuators import ImplicitActuatorCfg
+ 
++# === ADDED: Rough terrain import ===
++from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG
++
+ @configclass
+ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # env
+@@ -32,7 +35,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     state_space = 0
+     debug_vis = True
+     # === ADDED: Base height termination threshold ===
+-    base_height_min = 0.15
++    base_height_min = 0.05
+ 
+     # simulation
+     sim: SimulationCfg = SimulationCfg(
+@@ -46,16 +49,36 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+             restitution=0.0,
+         ),
+     )
++    # terrain = TerrainImporterCfg(
++    #     prim_path="/World/ground",
++    #     terrain_type="plane",
++    #     collision_group=-1,
++    #     physics_material=sim_utils.RigidBodyMaterialCfg(
++    #         friction_combine_mode="multiply",
++    #         restitution_combine_mode="multiply",
++    #         static_friction=1.0,
++    #         dynamic_friction=1.0,
++    #         restitution=0.0,
++    #     ),
++    #     debug_vis=False,
++    # )
++
++
+     terrain = TerrainImporterCfg(
+         prim_path="/World/ground",
+-        terrain_type="plane",
++        terrain_type="generator",
++        terrain_generator=ROUGH_TERRAINS_CFG,
++        max_init_terrain_level=5,
+         collision_group=-1,
+         physics_material=sim_utils.RigidBodyMaterialCfg(
+             friction_combine_mode="multiply",
+             restitution_combine_mode="multiply",
+             static_friction=1.0,
+             dynamic_friction=1.0,
+-            restitution=0.0,
++        ),
++        visual_material=sim_utils.MdlFileCfg(
++            mdl_path="{NVIDIA_NUCLEUS_DIR}/Materials/Base/Architecture/Shingles_01.mdl",
++            project_uvw=True,
+         ),
+         debug_vis=False,
+     )
+@@ -102,17 +125,17 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # === ADDED: Action rate penalty ===
+     action_rate_reward_scale = -0.1
+     # === ADDED: Raibert heuristic ===
+-    raibert_heuristic_reward_scale = -10.0
++    raibert_heuristic_reward_scale = -5.0 # -10.0
+     # === ADDED: Orientation penalty ===
+-    orient_reward_scale = -5.0
++    orient_reward_scale = 0.0  # -5.0
+     # === ADDED: Vertical velocity penalty ===
+-    lin_vel_z_reward_scale = -0.5
++    lin_vel_z_reward_scale = -0.0 # -0.5
+     # === ADDED: Joint velocity penalty ===
+     dof_vel_reward_scale = -0.0001
+     # === ADDED: Angular velocity penalty (roll/pitch) ===
+     ang_vel_xy_reward_scale = -0.001
+     # === ADDED: Feet clearance penalty ===
+-    feet_clearance_reward_scale = -30.0
++    feet_clearance_reward_scale = -100.0 # -30.0
+     # === ADDED: Contact tracking shaped force ===
+     tracking_contacts_shaped_force_reward_scale = 4.0
+ 

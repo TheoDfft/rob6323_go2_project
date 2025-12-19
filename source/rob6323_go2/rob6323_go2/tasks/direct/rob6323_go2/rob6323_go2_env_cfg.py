@@ -37,7 +37,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     state_space = 0
     debug_vis = True
     # === ADDED: Base height termination threshold ===
-    base_height_min = 0.25
+    base_height_min = 0.1
 
     # simulation
     sim: SimulationCfg = SimulationCfg(
@@ -146,7 +146,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     current_vel_visualizer_cfg.markers["arrow"].scale = (0.5, 0.5, 0.5)
 
     # reward scales
-    lin_vel_reward_scale = 1.0
+    lin_vel_reward_scale = 10.0
     yaw_rate_reward_scale = 0.1
     # === ADDED: Action rate penalty ===
     action_rate_reward_scale = -0.1
@@ -165,7 +165,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED: Contact tracking shaped force ===
     tracking_contacts_shaped_force_reward_scale = 0.0
     # === ADDED: Feet air time reward ===
-    feet_air_time_reward_scale = 0.01
+    feet_air_time_reward_scale = 0.1
     # === ADDED: Foot2contact penalty (penalizes the robot for having more or less than 2 feet in contact) ===
     foot2contact_reward_scale = -1.0
 

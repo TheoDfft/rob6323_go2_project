@@ -1,0 +1,52 @@
+--- git status ---
+HEAD detached at 30e67de
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+index 84df2db..44a2835 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+@@ -176,7 +176,7 @@ class Rob6323Go2Env(DirectRLEnv):
+ 
+         # === ADDED: Part 5 - Orientation penalty ===
+         # Penalize non-flat orientation (projected gravity XY should be 0 when robot is flat)
+-        rew_orient = torch.sum(torch.square(self.robot.data.projected_gravity_b[:, :2]), dim=1)
++        rew_orient = torch.sum(torch.square(self.robot.data.projected_gravity_b[:, 1:]), dim=1)
+ 
+         # === ADDED: Part Penalize vertical velocity (z-component of base linear velocity) ===
+         rew_lin_vel_z = torch.square(self.robot.data.root_lin_vel_b[:, 2])
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 27ae5af..16ffdd8 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -106,14 +106,14 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # === ADDED Part 1: Action rate penalty ===
+     action_rate_reward_scale = -0.1
+     # === ADDED Part 4: Raibert heuristic ===
+-    raibert_heuristic_reward_scale = -10.0
++    raibert_heuristic_reward_scale = 0.0
+     # === ADDED: Part 5 rewards ===
+-    orient_reward_scale = -5.0  # Penalize non-flat orientation
++    orient_reward_scale = -30.0  # Penalize non-flat orientation
+     lin_vel_z_reward_scale = -0.5  # Penalize vertical bouncing
+     dof_vel_reward_scale = -0.0001  # Penalize high joint velocities
+     ang_vel_xy_reward_scale = -0.001  # Penalize roll/pitch angular velocity
+     # === ADDED: Part 6: Foot clearance ===
+-    feet_clearance_reward_scale = -30.0  # Penalize low foot height during swing
++    feet_clearance_reward_scale = 0.0  # Penalize low foot height during swing
+     # === ADDED: Part 6: Tracking contacts shaped force ===
+-    tracking_contacts_shaped_force_reward_scale = 4.0  # Reward matching gait contact plan
++    tracking_contacts_shaped_force_reward_scale = 0.0  # Reward matching gait contact plan
+ 

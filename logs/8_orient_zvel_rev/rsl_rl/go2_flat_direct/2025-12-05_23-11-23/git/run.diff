@@ -1,0 +1,29 @@
+--- git status ---
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 0f6c407..d7c70f6 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -111,5 +111,5 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     tracking_contacts_shaped_force_reward_scale = 4.0
+ 
+     # === ADDED: Part 5 rewards ===
+-    orient_reward_scale = -0.5  # Penalize non-flat orientation
+-    lin_vel_z_reward_scale = -5.0  # Penalize vertical bouncing
++    orient_reward_scale = -5.0  # Penalize non-flat orientation
++    lin_vel_z_reward_scale = -0.5  # Penalize vertical bouncing

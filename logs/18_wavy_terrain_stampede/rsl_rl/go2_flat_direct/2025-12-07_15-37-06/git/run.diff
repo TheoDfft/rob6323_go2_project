@@ -1,0 +1,49 @@
+--- git status ---
+On branch master
+Your branch is ahead of 'origin/master' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 103a4e3..e675050 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -56,10 +56,10 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+         prim_path="/World/ground",
+         terrain_type="generator",
+         terrain_generator=TerrainGeneratorCfg(
+-            size=(8.0, 8.0),  # 8m x 8m per tile (from reference)
++            size=(40.0, 40.0),  # 8m x 8m per tile (from reference)
+             border_width=20.0,  # Flat spawn border
+-            num_rows=10,  # numLevels from reference
+-            num_cols=20,  # numTerrains from reference
++            num_rows=1,  # numLevels from reference
++            num_cols=1,  # numTerrains from reference
+             horizontal_scale=0.1,  # Resolution: 10cm per height sample
+             vertical_scale=0.005,  # Height scale factor
+             slope_threshold=0.75,
+@@ -67,9 +67,9 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+             sub_terrains={
+                 "waves": HfWaveTerrainCfg(
+                     proportion=1.0,  # 100% wave terrain
+-                    amplitude_range=(0.03, 0.1),  # Wave height: 2-6cm amplitude
+-                    num_waves=5,  # 5 waves per 8m = 1.6m wavelength (> 1.4m requirement)
+-                    border_width=0.25,
++                    amplitude_range=(0.2, 0.2),  # Wave height: 2-6cm amplitude
++                    num_waves=2,  # 5 waves per 8m = 1.6m wavelength (> 1.4m requirement)
++                    border_width=0.5,
+                 ),
+             },
+         ),

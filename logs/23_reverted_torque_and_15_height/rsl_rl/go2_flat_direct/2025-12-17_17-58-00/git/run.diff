@@ -1,0 +1,44 @@
+--- git status ---
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/BASELINE_rob6323_go2_env.py
+	source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/BASELINE_rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 3c3dec2..36014ba 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -33,7 +33,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     state_space = 0
+     debug_vis = True
+     # === ADDED Part 3: Early termination ===
+-    base_height_min = 0.05  # Terminate if base is lower than 5cm
++    base_height_min = 0.15  # Terminate if base is lower than 15cm
+ 
+     # simulation
+     sim: SimulationCfg = SimulationCfg(
+@@ -67,7 +67,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # === ADDED Part 2: PD control gains ===
+     Kp = 20.0  # Proportional gain
+     Kd = 0.5   # Derivative gain
+-    torque_limits = 50.0  # Max torque
++    torque_limits = 100.0  # Max torque
+ 
+     # === MODIFIED Part 2: Disable implicit actuator PD, use custom PD ===
+     # Update robot_cfg

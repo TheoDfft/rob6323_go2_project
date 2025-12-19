@@ -1,0 +1,62 @@
+--- git status ---
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+index 2b28417..e6288e8 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+@@ -189,7 +189,7 @@ class Rob6323Go2Env(DirectRLEnv):
+         # === ADDED: Feet clearance penalty ===
+         phases = 1 - torch.abs(1.0 - torch.clip((self.foot_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
+         foot_heights = self.foot_positions_w[:, :, 2]
+-        target_height = 0.1 * phases + 0.02
++        target_height = 0.15 * phases + 0.02
+         rew_foot_clearance = torch.square(target_height - foot_heights) * (1 - self.desired_contact_states)
+         rew_feet_clearance = torch.sum(rew_foot_clearance, dim=1)
+ 
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 1351b00..5a8ebf1 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -135,8 +135,8 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     current_vel_visualizer_cfg.markers["arrow"].scale = (0.5, 0.5, 0.5)
+ 
+     # reward scales
+-    lin_vel_reward_scale = 1.0
+-    yaw_rate_reward_scale = 0.5
++    lin_vel_reward_scale = 10.0
++    yaw_rate_reward_scale = 0.1
+     # === ADDED: Action rate penalty ===
+     action_rate_reward_scale = -0.1
+     # === ADDED: Raibert heuristic ===
+@@ -144,13 +144,13 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # === ADDED: Orientation penalty ===
+     orient_reward_scale = 0.0  # -5.0
+     # === ADDED: Vertical velocity penalty ===
+-    lin_vel_z_reward_scale = -0.5
++    lin_vel_z_reward_scale = -0.05
+     # === ADDED: Joint velocity penalty ===
+     dof_vel_reward_scale = -0.0001
+     # === ADDED: Angular velocity penalty (roll/pitch) ===
+     ang_vel_xy_reward_scale = -0.001
+     # === ADDED: Feet clearance penalty ===
+-    feet_clearance_reward_scale = -200.0 # (was -30.0) Notes: Need to increase this to force the robot to lift its feet more often and "climb" more easily
++    feet_clearance_reward_scale = -30.0 # (was -30.0) Notes: Need to increase this to force the robot to lift its feet more often and "climb" more easily
+     # === ADDED: Contact tracking shaped force ===
+     tracking_contacts_shaped_force_reward_scale = 0.0
+ 

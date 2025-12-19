@@ -1,0 +1,35 @@
+--- git status ---
+On branch master
+Your branch is ahead of 'origin/master' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 103a4e3..e89ab55 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -67,9 +67,9 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+             sub_terrains={
+                 "waves": HfWaveTerrainCfg(
+                     proportion=1.0,  # 100% wave terrain
+-                    amplitude_range=(0.03, 0.1),  # Wave height: 2-6cm amplitude
+-                    num_waves=5,  # 5 waves per 8m = 1.6m wavelength (> 1.4m requirement)
+-                    border_width=0.25,
++                    amplitude_range=(0.05, 0.4),  # Wave height: 2-6cm amplitude
++                    num_waves=2,  # 5 waves per 8m = 1.6m wavelength (> 1.4m requirement)
++                    border_width=0.0,
+                 ),
+             },
+         ),

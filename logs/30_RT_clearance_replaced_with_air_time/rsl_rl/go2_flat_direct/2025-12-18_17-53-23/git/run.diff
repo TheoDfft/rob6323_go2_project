@@ -1,0 +1,159 @@
+--- git status ---
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+index 2b28417..3bf21e0 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+@@ -17,7 +17,7 @@ from isaaclab.assets import Articulation
+ from isaaclab.envs import DirectRLEnv
+ from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
+ from isaaclab.utils.math import sample_uniform
+-from isaaclab.sensors import ContactSensor
++from isaaclab.sensors import ContactSensor, RayCaster
+ from isaaclab.markers import VisualizationMarkers
+ import isaaclab.utils.math as math_utils
+ 
+@@ -53,6 +53,7 @@ class Rob6323Go2Env(DirectRLEnv):
+                 "ang_vel_xy",
+                 "feet_clearance",
+                 "tracking_contacts_shaped_force",
++                "feet_air_time",
+             ]
+         }
+ 
+@@ -99,7 +100,10 @@ class Rob6323Go2Env(DirectRLEnv):
+     def _setup_scene(self):
+         self.robot = Articulation(self.cfg.robot_cfg)
+         self._contact_sensor = ContactSensor(self.cfg.contact_sensor)
+-        # add ground plane
++        if isinstance(self.cfg, Rob6323Go2EnvCfg):
++            # we add a height scanner for perceptive locomotion
++            self._height_scanner = RayCaster(self.cfg.height_scanner)
++            self.scene.sensors["height_scanner"] = self._height_scanner
+         self.cfg.terrain.num_envs = self.scene.cfg.num_envs
+         self.cfg.terrain.env_spacing = self.scene.cfg.env_spacing
+         self._terrain = self.cfg.terrain.class_type(self.cfg.terrain)
+@@ -136,6 +140,10 @@ class Rob6323Go2Env(DirectRLEnv):
+ 
+     def _get_observations(self) -> dict:
+         self._previous_actions = self._actions.clone()
++        height_data = None
++        height_data = (
++                self._height_scanner.data.pos_w[:, 2].unsqueeze(1) - self._height_scanner.data.ray_hits_w[..., 2] - 0.5
++            ).clip(-1.0, 1.0)
+         obs = torch.cat(
+             [
+                 tensor
+@@ -148,6 +156,7 @@ class Rob6323Go2Env(DirectRLEnv):
+                     self.robot.data.joint_vel,
+                     self._actions,
+                     self.clock_inputs,  # === ADDED: Gait phase info ===
++                    height_data, # === ADDED: Height data for rough terrain locomotion ===
+                 )
+                 if tensor is not None
+             ],
+@@ -202,6 +211,13 @@ class Rob6323Go2Env(DirectRLEnv):
+                 1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.0)
+             )
+         rew_tracking_contacts_shaped_force = rew_tracking_contacts_shaped_force / 4
++
++        # === ADDED: Feet air time reward ===
++        first_contact = self._contact_sensor.compute_first_contact(self.step_dt)[:, self._feet_ids_sensor]
++        last_air_time = self._contact_sensor.data.last_air_time[:, self._feet_ids_sensor]
++        air_time = torch.sum((last_air_time - 0.5) * first_contact, dim=1) * (
++            torch.norm(self._commands[:, :2], dim=1) > 0.1
++        )
+         
+         rewards = {
+             "track_lin_vel_xy_exp": lin_vel_error_mapped * self.cfg.lin_vel_reward_scale,
+@@ -214,6 +230,7 @@ class Rob6323Go2Env(DirectRLEnv):
+             "ang_vel_xy": rew_ang_vel_xy * self.cfg.ang_vel_xy_reward_scale,
+             "feet_clearance": rew_feet_clearance * self.cfg.feet_clearance_reward_scale,
+             "tracking_contacts_shaped_force": rew_tracking_contacts_shaped_force * self.cfg.tracking_contacts_shaped_force_reward_scale,
++            "feet_air_time": air_time * self.cfg.feet_air_time_reward_scale,
+         }
+         reward = torch.sum(torch.stack(list(rewards.values())), dim=0)
+         # Logging
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 1351b00..84ca9a9 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -13,7 +13,7 @@ from isaaclab.scene import InteractiveSceneCfg
+ from isaaclab.sim import SimulationCfg
+ from isaaclab.utils import configclass
+ from isaaclab.terrains import TerrainImporterCfg
+-from isaaclab.sensors import ContactSensorCfg
++from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
+ from isaaclab.markers import VisualizationMarkersCfg
+ from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
+ 
+@@ -32,7 +32,8 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # - spaces definition
+     action_scale = 0.25
+     action_space = 12
+-    observation_space = 48 + 4  # === MODIFIED: Added 4 for clock inputs ===
++    # observation_space = 48 + 4  # === MODIFIED: Added 4 for clock inputs ===
++    observation_space = 235 # === ADDED: 48 + 187 rays for height scanner ===
+     state_space = 0
+     debug_vis = True
+     # === ADDED: Base height termination threshold ===
+@@ -98,6 +99,16 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+         debug_vis=False,
+     )
+ 
++    # we add a height scanner for perceptive locomotion
++    height_scanner = RayCasterCfg(
++        prim_path="/World/envs/env_.*/Robot/base",
++        offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
++        ray_alignment="yaw",
++        pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
++        debug_vis=False,
++        mesh_prim_paths=["/World/ground"],
++    )
++
+     # robot(s)
+     # === ADDED: PD control gains ===
+     Kp = 20.0
+@@ -136,7 +147,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+ 
+     # reward scales
+     lin_vel_reward_scale = 1.0
+-    yaw_rate_reward_scale = 0.5
++    yaw_rate_reward_scale = 0.1
+     # === ADDED: Action rate penalty ===
+     action_rate_reward_scale = -0.1
+     # === ADDED: Raibert heuristic ===
+@@ -144,13 +155,15 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     # === ADDED: Orientation penalty ===
+     orient_reward_scale = 0.0  # -5.0
+     # === ADDED: Vertical velocity penalty ===
+-    lin_vel_z_reward_scale = -0.5
++    lin_vel_z_reward_scale = -0.05
+     # === ADDED: Joint velocity penalty ===
+     dof_vel_reward_scale = -0.0001
+     # === ADDED: Angular velocity penalty (roll/pitch) ===
+     ang_vel_xy_reward_scale = -0.001
+     # === ADDED: Feet clearance penalty ===
+-    feet_clearance_reward_scale = -200.0 # (was -30.0) Notes: Need to increase this to force the robot to lift its feet more often and "climb" more easily
++    feet_clearance_reward_scale = -0.0 # (was -30.0) Notes: Need to increase this to force the robot to lift its feet more often and "climb" more easily
+     # === ADDED: Contact tracking shaped force ===
+     tracking_contacts_shaped_force_reward_scale = 0.0
++    # === ADDED: Feet air time reward ===
++    feet_air_time_reward_scale = 0.5
+ 
