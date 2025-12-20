@@ -220,11 +220,21 @@ class Rob6323Go2Env(DirectRLEnv):
             torch.norm(self._commands[:, :2], dim=1) > 0.1
         )
 
-        # === ADDED: Foot2contact penalty (penalizes the robot for having more or less than 2 feet in contact) ===
+        # === ADDED: Foot2contact reward (rewards diagonal foot pairs for trotting gait) ===
         # Check vertical contact forces > 1.0 for all feet
         foot_contact_forces_z = self._contact_sensor.data.net_forces_w[:, self._feet_ids_sensor, 2]
-        num_feet_in_contact = (foot_contact_forces_z > 1.0).sum(dim=1)
-        rew_foot2contact = -torch.abs(num_feet_in_contact - 2) / 2.0
+        feet_in_contact = (foot_contact_forces_z > 1.0).float()  # [num_envs, 4] - FL, FR, RL, RR
+        
+        # Diagonal pairs: FL+RR (indices 0,3) or FR+RL (indices 1,2)
+        diagonal_pair_1 = (feet_in_contact[:, 0] * feet_in_contact[:, 3])  # FL + RR both in contact
+        diagonal_pair_2 = (feet_in_contact[:, 1] * feet_in_contact[:, 2])  # FR + RL both in contact
+        
+        # Reward if exactly one diagonal pair is in contact (trotting gait)
+        # Only reward when exactly 2 feet are in contact AND they form a diagonal pair
+        num_feet_in_contact = feet_in_contact.sum(dim=1)
+        is_exactly_two_feet = (num_feet_in_contact == 2).float()
+        is_diagonal_pair = ((diagonal_pair_1 + diagonal_pair_2) > 0.5).float()
+        rew_foot2contact = is_exactly_two_feet * is_diagonal_pair
         
         rewards = {
             "track_lin_vel_xy_exp": lin_vel_error_mapped * self.cfg.lin_vel_reward_scale,
@@ -458,6 +468,10 @@ class Rob6323Go2Env(DirectRLEnv):
 
         err_raibert_heuristic = torch.abs(desired_footsteps_body_frame - footsteps_in_body_frame[:, :, 0:2])
 
-        reward = torch.sum(torch.square(err_raibert_heuristic), dim=(1, 2))
+        # === MODIFIED: Relaxed calculation using exponential decay (allows more deviation) ===
+        # Use exponential decay instead of squared error to allow small deviations without penalty
+        # Small errors get minimal penalty, large errors get penalized more
+        err_magnitude = torch.norm(err_raibert_heuristic, dim=2)  # (N, 4) - error per foot
+        reward = torch.sum(1.0 - torch.exp(-err_magnitude / self.cfg.raibert_heuristic_relaxation), dim=1)
 
         return reward

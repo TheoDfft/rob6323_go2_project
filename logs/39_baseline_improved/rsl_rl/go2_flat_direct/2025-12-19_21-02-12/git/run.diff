@@ -1,0 +1,75 @@
+--- git status ---
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+	modified:   source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	logs/37_RT_baseline_higher_vel_tracking/
+	logs/38_RT_baseline_stronger_tracking/
+	logs/38_RT_test_with_small_raibert_reward/
+
+no changes added to commit (use "git add" and/or "git commit -a") 
+
+
+--- git diff ---
+diff --git a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc
+index cfe10a7..f2cdd8a 100644
+Binary files a/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc and b/scripts/rsl_rl/__pycache__/cli_args.cpython-311.pyc differ
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+index 46f4b12..2c97018 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env.py
+@@ -458,6 +458,10 @@ class Rob6323Go2Env(DirectRLEnv):
+ 
+         err_raibert_heuristic = torch.abs(desired_footsteps_body_frame - footsteps_in_body_frame[:, :, 0:2])
+ 
+-        reward = torch.sum(torch.square(err_raibert_heuristic), dim=(1, 2))
++        # === MODIFIED: Relaxed calculation using exponential decay (allows more deviation) ===
++        # Use exponential decay instead of squared error to allow small deviations without penalty
++        # Small errors get minimal penalty, large errors get penalized more
++        err_magnitude = torch.norm(err_raibert_heuristic, dim=2)  # (N, 4) - error per foot
++        reward = torch.sum(1.0 - torch.exp(-err_magnitude / self.cfg.raibert_heuristic_relaxation), dim=1)
+ 
+         return reward
+\ No newline at end of file
+diff --git a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+index 9b970f2..e5b5a5c 100644
+--- a/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
++++ b/source/rob6323_go2/rob6323_go2/tasks/direct/rob6323_go2/rob6323_go2_env_cfg.py
+@@ -37,7 +37,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     state_space = 0
+     debug_vis = True
+     # === ADDED: Base height termination threshold ===
+-    base_height_min = 0.20
++    base_height_min = 0.15
+ 
+     # simulation
+     sim: SimulationCfg = SimulationCfg(
+@@ -146,14 +146,15 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
+     current_vel_visualizer_cfg.markers["arrow"].scale = (0.5, 0.5, 0.5)
+ 
+     # reward scales
+-    lin_vel_reward_scale = 1.0
+-    yaw_rate_reward_scale = 0.1
++    lin_vel_reward_scale = 3.0
++    yaw_rate_reward_scale = 0.3
+     # === ADDED: Action rate penalty ===
+     action_rate_reward_scale = -0.1
+-    # === ADDED: Raibert heuristic ===
+-    raibert_heuristic_reward_scale = -0.0 # -10.0
++    # === ADDED: Raibert heuristic (relaxed for rough terrain) ===
++    raibert_heuristic_reward_scale = -0.0  # Small scale for rough terrain
++    raibert_heuristic_relaxation = 0.15  # Allow ~15cm deviation before significant penalty
+     # === ADDED: Orientation penalty ===
+-    orient_reward_scale = 0.0  # -5.0
++    orient_reward_scale = -0.001  # -5.0
+     # === ADDED: Vertical velocity penalty ===
+     lin_vel_z_reward_scale = -0.1
+     # === ADDED: Joint velocity penalty ===

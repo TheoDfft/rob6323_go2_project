@@ -37,7 +37,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     state_space = 0
     debug_vis = True
     # === ADDED: Base height termination threshold ===
-    base_height_min = 0.20
+    base_height_min = 0.15
 
     # simulation
     sim: SimulationCfg = SimulationCfg(
@@ -146,14 +146,15 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     current_vel_visualizer_cfg.markers["arrow"].scale = (0.5, 0.5, 0.5)
 
     # reward scales
-    lin_vel_reward_scale = 1.0
-    yaw_rate_reward_scale = 0.1
+    lin_vel_reward_scale = 3.0
+    yaw_rate_reward_scale = 0.3
     # === ADDED: Action rate penalty ===
     action_rate_reward_scale = -0.1
-    # === ADDED: Raibert heuristic ===
-    raibert_heuristic_reward_scale = -0.0 # -10.0
+    # === ADDED: Raibert heuristic (relaxed for rough terrain) ===
+    raibert_heuristic_reward_scale = -0.0  # Small scale for rough terrain
+    raibert_heuristic_relaxation = 0.15  # Allow ~15cm deviation before significant penalty
     # === ADDED: Orientation penalty ===
-    orient_reward_scale = 0.0  # -5.0
+    orient_reward_scale = -0.001  # -5.0
     # === ADDED: Vertical velocity penalty ===
     lin_vel_z_reward_scale = -0.1
     # === ADDED: Joint velocity penalty ===
@@ -165,6 +166,6 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # === ADDED: Contact tracking shaped force ===
     tracking_contacts_shaped_force_reward_scale = 0.0
     # === ADDED: Feet air time reward ===
-    feet_air_time_reward_scale = 0.1
-    # === ADDED: Foot2contact penalty (penalizes the robot for having more or less than 2 feet in contact) ===
-    foot2contact_reward_scale = -1.0
+    feet_air_time_reward_scale = 0.0
+    # === ADDED: Foot2contact reward (rewards diagonal foot pairs for trotting gait) ===
+    foot2contact_reward_scale = 1.0
